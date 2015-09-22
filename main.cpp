@@ -3,6 +3,8 @@
  * $Id: sinewave3D-glm.cpp,v 1.1 2014/08/25 02:08:39 gl Exp gl $
  */
 
+#include "shaders.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
@@ -50,9 +52,10 @@ typedef struct {
 	int waveDim;
 	int frameCount;
 	int lastStatsDisplayT;
+	int shininess;
 	polygonMode_t polygonMode;
 } Global;
-Global g = { false, true, false, false, false, false, false, 0.0, 0.0, 0.0, 1.0, 0, 0, 8, 2, 0, 0, line };
+Global g = { false, true, false, false, false, false, false, 0.0, 0.0, 0.0, 1.0, 0, 0, 8, 2, 0, 0, 20, line };
 
 typedef enum { inactive, rotate, pan, zoom } CameraControl;
 
@@ -63,8 +66,9 @@ struct camera_t {
 	CameraControl control;
 } camera = { 0, 0, 30.0, -30.0, 1.0, inactive };
 
-glm::vec3 cyan( 1.0, 0.0, 1.0 );
+glm::vec3 cyan( 0.5, 0.5, 0.0 );
 const float milli = 1000.0;
+static GLuint shaderProgram;
 
 glm::mat4 modelViewMatrix;
 glm::mat3 normalMatrix;
@@ -76,7 +80,7 @@ void printVec(float *v, int n)
 	int i;
 
 	for (i = 0; i < n; i++)
-		printf("%4.2f ", v[i]); 
+		printf("%4.2f ", v[i]);
 	printf("\n");
 }
 
@@ -85,7 +89,7 @@ void printMatrixLinear(float *m, int n)
 	int i;
 
 	for (i = 0; i < n; i++)
-		printf("%4.2f ", m[i]); 
+		printf("%4.2f ", m[i]);
 	printf("\n");
 }
 
@@ -98,23 +102,25 @@ void printMatrixColumnMajor(float *m, int n)
 			printf("%5.2f ", m[i*4+j]);
 		}
 		printf("\n");
-	} 
+	}
 	printf("\n");
 }
 
-void init(void) 
+void init(void)
 {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	if (g.twoside)
 		glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
+
+	shaderProgram = getShader("shader.vert", "shader.frag");
 }
 
 void reshape(int w, int h)
 {
 	g.width = w;
 	g.height = h;
-	glViewport(0, 0, (GLsizei) w, (GLsizei) h); 
+	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -100.0, 100.0);
@@ -159,7 +165,7 @@ void drawVector(glm::vec3 & o, glm::vec3 & v, float s, bool normalize, glm::vec3
 	glPushAttrib(GL_CURRENT_BIT);
 	glColor3fv(&c[0]);
 	glBegin(GL_LINES);
-	if (normalize) 
+	if (normalize)
 		v = glm::normalize(v);
 
 	glVertex3fv(&o[0]);
@@ -177,7 +183,7 @@ void consolePM()
 	printf("tesselation:       %5d\n", g.tess);
 }
 
-// On screen display 
+// On screen display
 void displayOSD()
 {
 	char buffer[30];
@@ -192,7 +198,7 @@ void displayOSD()
 	glPushMatrix();
 	glLoadIdentity();
 
-	/* Set up orthographic coordinate system to match the window, 
+	/* Set up orthographic coordinate system to match the window,
 	   i.e. (0,0)-(w,h) */
 	w = glutGet(GLUT_WINDOW_WIDTH);
 	h = glutGet(GLUT_WINDOW_HEIGHT);
@@ -260,15 +266,15 @@ glm::vec3 computeLighting(glm::vec3 & rEC, glm::vec3 & nEC)
 	// Ambient
 	// Default fixed pipeline ambient light and material are both (0.2, 0.2, 0.2)
 	glm::vec3 ambient(0.2 * 0.2);
-	// Default diffuse light for GL_LIGHT0 is (1.0, 1.0, 1.0) 
+	// Default diffuse light for GL_LIGHT0 is (1.0, 1.0, 1.0)
 	// and default diffuse material is (0.8, 0.8, 0.8);
 	// Lambertian diffuse reflection: L.V
 	float dp = glm::dot(nEC, lEC);
 	glm::vec3 diffuse(0.0);
 	if (dp > 0.0)
-		diffuse = glm::vec3(dp * 1.0 * 0.8);	
+		diffuse = glm::vec3(dp * 1.0 * 0.8);
 
-	// Color is ambient + diffuse 
+	// Color is ambient + diffuse
 	glm::vec3 color = ambient + diffuse;
 
 	return color;
@@ -322,7 +328,7 @@ void drawSineWave(int tess)
 				}
 			}
 
-			rEC = glm::vec3(modelViewMatrix * glm::vec4(r, 1.0));
+			rEC = glm::vec3(modelViewMatrix * glm::vec4(r, g.shininess));
 			if (g.lighting) {
 				nEC = normalMatrix * glm::normalize(n);
 				if (g.fixed) {
@@ -343,7 +349,7 @@ void drawSineWave(int tess)
 				}
 			}
 
-			rEC = glm::vec3(modelViewMatrix * glm::vec4(r, 1.0));
+			rEC = glm::vec3(modelViewMatrix * glm::vec4(r, g.shininess));
 			if (g.lighting) {
 				nEC = normalMatrix * glm::normalize(n);
 				if (g.fixed) {
@@ -403,7 +409,7 @@ void idle()
 
 	// Accumulate time if animation enabled
 	if (g.animate) {
-		dt = t - g.lastT; 
+		dt = t - g.lastT;
 		g.t += dt;
 		g.lastT = t;
 		if (debug[d_animation])
@@ -516,26 +522,26 @@ void keyboard(unsigned char key, int x, int y)
 			g.animate = !g.animate;
 			if (g.animate) {
 				g.lastT = glutGet(GLUT_ELAPSED_TIME) / milli;
-			} 
+			}
 			break;
 		case 'd':
-			//TODO toggle directional, positional lighting 
+			//TODO toggle directional, positional lighting
 			break;
 		case 'f':
-			//TODO toggle smooth, flat shading 
+			//TODO toggle smooth, flat shading
 			break;
 		case 'H':
-			//TODO increase shininess 
+			//TODO increase shininess
 			break;
 		case 'h':
-			//TODO decrease shininess 
+			//TODO decrease shininess
 			break;
 		case 'l':
 			g.lighting = !g.lighting;
 			glutPostRedisplay();
 			break;
 		case 'm':
-			//TODO Blinn-Phong or Phong specular lighting model 
+			//TODO Blinn-Phong or Phong specular lighting model
 			break;
 		case 'n':
 			g.drawNormals = !g.drawNormals;
@@ -550,6 +556,7 @@ void keyboard(unsigned char key, int x, int y)
 			break;
 		case 's':
 			g.fixed = !g.fixed;
+			setShader(g.fixed);
 			glutPostRedisplay();
 			break;
 		case 'T':
@@ -646,11 +653,11 @@ int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize (1024, 1024); 
+	glutInitWindowSize (1024, 1024);
 	glutInitWindowPosition (100, 100);
 	glutCreateWindow (argv[0]);
 	init();
-	glutDisplayFunc(display); 
+	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutIdleFunc(idle);
 	glutKeyboardFunc(keyboard);

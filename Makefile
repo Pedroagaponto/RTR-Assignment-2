@@ -1,8 +1,8 @@
 CC=g++
 EXE = assignment2
-OBJS = main.o
+OBJS = main.o shaders.o
 
-CFLAGS = -g -Wall
+CFLAGS = -g
 LFLAGS = -g
 
 all: ${EXE}
