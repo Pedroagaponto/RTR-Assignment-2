@@ -27,5 +27,4 @@ void setShader(GLuint shaderProgram);
 }
 #endif
 
-
 #endif

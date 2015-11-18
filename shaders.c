@@ -23,8 +23,6 @@
 #pragma warning(disable:4996)
 #endif
 
-GLuint shaderProgram;
-
 int oglError(int line, const char* file)
 {
 	GLenum glErr;

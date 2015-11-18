@@ -55,7 +55,7 @@ typedef struct {
 	int shininess;
 	polygonMode_t polygonMode;
 } Global;
-Global g = { false, true, false, false, false, false, false, 0.0, 0.0, 0.0, 1.0, 0, 0, 8, 2, 0, 0, 20, line };
+Global g = { false, true, true, false, false, false, false, 0.0, 0.0, 0.0, 1.0, 0, 0, 8, 2, 0, 0, 20, line };
 
 typedef enum { inactive, rotate, pan, zoom } CameraControl;
 
@@ -66,14 +66,15 @@ struct camera_t {
 	CameraControl control;
 } camera = { 0, 0, 30.0, -30.0, 1.0, inactive };
 
-glm::vec3 cyan( 0.5, 0.5, 0.0 );
+static glm::vec3 colour(1.0, 0.0, 0.0);
+glm::vec3 cyan(0.5, 0.5, 0.0);
 const float milli = 1000.0;
-static GLuint shaderProgram;
 
 glm::mat4 modelViewMatrix;
 glm::mat3 normalMatrix;
 
-int err;
+static int err;
+static GLuint shaderProgram;
 
 void printVec(float *v, int n)
 {
@@ -136,7 +137,7 @@ void drawAxes(float length)
 	glBegin(GL_LINES);
 
 	/* x axis */
-	glColor3f(1.0, 0.0, 0.0);
+	glColor3f(colour.x, colour.y, colour.z);
 	v = modelViewMatrix * glm::vec4(-length, 0.0, 0.0, 1.0);
 	glVertex3fv(&v[0]);
 	v = modelViewMatrix * glm::vec4(length, 0.0, 0.0, 1.0);
@@ -556,7 +557,10 @@ void keyboard(unsigned char key, int x, int y)
 			break;
 		case 's':
 			g.fixed = !g.fixed;
-			setShader(g.fixed);
+			if (g.fixed)
+				setShader(0);
+			else
+				setShader(shaderProgram);
 			glutPostRedisplay();
 			break;
 		case 'T':
@@ -646,8 +650,6 @@ void motion(int x, int y)
 
 	glutPostRedisplay();
 }
-
-
 
 int main(int argc, char** argv)
 {
