@@ -1,6 +1,6 @@
 CC=g++
 EXE = assignment2
-OBJS = main.o shaders.o
+OBJS = main.o core.o draw.o calc.o io.o shaders.o
 
 CFLAGS = -g
 LFLAGS = -g
