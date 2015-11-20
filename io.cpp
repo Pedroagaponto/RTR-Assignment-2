@@ -26,10 +26,14 @@ void keyboard(unsigned char key, int x, int y)
 			//TODO toggle smooth, flat shading
 			break;
 		case 'H':
-			//TODO increase shininess
+			g.shininess = (g.shininess * 2 < 10000) ? (g.shininess * 2) : 10000;
+			glutPostRedisplay();
+			printf("shininess: %d\n", g.shininess);
 			break;
 		case 'h':
-			//TODO decrease shininess
+			g.shininess = (g.shininess / 2 > 1) ? (g.shininess / 2) : 1;
+			glutPostRedisplay();
+			printf("shininess: %d\n", g.shininess);
 			break;
 		case 'l':
 			g.lighting = !g.lighting;
@@ -58,11 +62,11 @@ void keyboard(unsigned char key, int x, int y)
 			//TODO per (vertex, pixel) lighting
 			break;
 		case 's':
-			g.fixed = !g.fixed;
-			if (g.fixed)
-				setShader(0);
-			else
+			g.shader = !g.shader;
+			if (g.shader)
 				setShader(shaderProgram);
+			else
+				setShader(0);
 			glutPostRedisplay();
 			break;
 		case 'T':

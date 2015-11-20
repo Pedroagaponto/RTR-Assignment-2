@@ -32,6 +32,7 @@ typedef struct {
 	bool animate;
 	bool lighting;
 	bool fixed;
+	bool shader;
 	bool twoside;
 	bool displayOSD;
 	bool consolePM;

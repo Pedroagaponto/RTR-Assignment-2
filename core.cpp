@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 bool debug[d_nflags] = { false, false, false, false, false, false, false };
-Global g = { false, true, true, false, false, false, false, 0.0, 0.0, 0.0, 1.0, 0, 0, 8, 2, 0, 0, 20, line };
+Global g = { false, true, true, false, false, false, false, false, 0.0, 0.0, 0.0, 1.0, 0, 0, 8, 2, 0, 0, 20, line };
 struct camera_t camera = { 0, 0, 30.0, -30.0, 1.0, inactive };
 GLuint shaderProgram;
 glm::mat4 modelViewMatrix;
